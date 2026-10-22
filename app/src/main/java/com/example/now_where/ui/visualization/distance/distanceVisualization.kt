@@ -13,6 +13,7 @@ import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
@@ -36,6 +37,7 @@ import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.now_where.domain.DayState
+import com.example.now_where.domain.Event
 import com.example.now_where.domain.TimeNotation
 import com.example.now_where.ui.theme.NowWhereColors
 import java.time.LocalDate
@@ -77,11 +79,16 @@ fun DayState.toDistanceTarget(): DistanceTarget {
 fun DistanceVisualization(
     day: DayState,
     modifier: Modifier = Modifier,
+    onEventClick: (Event) -> Unit = {},
     windowMinutes: Float = DEFAULT_WINDOW_MINUTES
 ) {
+    val activeOrNext = day.events.firstOrNull { it.start <= day.now && day.now < it.end }
+        ?: day.events.filter { it.start > day.now }.minByOrNull { it.start }
+
     DistanceScene(
         target = day.toDistanceTarget(),
         modifier = modifier,
+        onEventClick = { activeOrNext?.let(onEventClick) },
         windowMinutes = windowMinutes
     )
 }
@@ -90,6 +97,7 @@ fun DistanceVisualization(
 fun DistanceScene(
     target: DistanceTarget,
     modifier: Modifier = Modifier,
+    onEventClick: () -> Unit = {},
     windowMinutes: Float = DEFAULT_WINDOW_MINUTES
 ) {
     // 0f = event is right on top of you, 1f = event is as far away as the screen shows.
@@ -205,6 +213,7 @@ fun DistanceScene(
                 modifier = Modifier
                     .align(Alignment.TopCenter)
                     .offset { IntOffset(0, (eventY - 56.dp).roundToPx()) }
+                    .clickable(onClick = onEventClick)
             )
         }
 

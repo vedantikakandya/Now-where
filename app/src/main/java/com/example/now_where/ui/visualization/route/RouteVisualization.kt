@@ -8,6 +8,7 @@ import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.BoxWithConstraints
@@ -80,6 +81,7 @@ private const val ProximityHorizonMinutes = 240f
 fun RouteVisualization(
     day: DayState,
     modifier: Modifier = Modifier,
+    onEventClick: (Event) -> Unit = {},
     reduceMotion: Boolean = false,
 ) {
     BoxWithConstraints(modifier) {
@@ -133,6 +135,7 @@ fun RouteVisualization(
                         item = item,
                         isNext = item.event == day.nextEvent,
                         day = day,
+                        onClick = { onEventClick(item.event) }
                     )
                 }
 
@@ -251,6 +254,7 @@ private fun PathCanvas(nowY: Dp, topPad: Dp, items: List<RouteItem>) {
 private fun RouteRow(
     y: Dp,
     description: String,
+    onClick: (() -> Unit)? = null,
     startContent: @Composable BoxScope.() -> Unit,
     marker: @Composable BoxScope.() -> Unit,
     endContent: @Composable BoxScope.() -> Unit,
@@ -260,6 +264,7 @@ private fun RouteRow(
             .offset(y = y - RowHeight / 2)
             .fillMaxWidth()
             .height(RowHeight)
+            .then(if (onClick != null) Modifier.clickable(onClick = onClick) else Modifier)
             .semantics(mergeDescendants = true) { contentDescription = description },
         verticalAlignment = Alignment.CenterVertically,
     ) {
@@ -298,7 +303,12 @@ private fun HourlyRow(y: Dp, label: String, past: Boolean) {
 }
 
 @Composable
-private fun EventRow(item: RouteItem, isNext: Boolean, day: DayState) {
+private fun EventRow(
+    item: RouteItem,
+    isNext: Boolean,
+    day: DayState,
+    onClick: () -> Unit = {}
+) {
     val timeText = TimeFormat.clock(item.event.start, day.notation)
     val distanceText = when {
         isNext -> "in ${TimeFormat.duration(day.minutesUntil(item.event))}"
@@ -313,6 +323,7 @@ private fun EventRow(item: RouteItem, isNext: Boolean, day: DayState) {
     RouteRow(
         y = item.startY,
         description = description,
+        onClick = onClick,
         startContent = {
             Text(
                 text = timeText,

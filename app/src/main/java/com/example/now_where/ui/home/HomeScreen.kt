@@ -30,6 +30,7 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.now_where.domain.Event
 import com.example.now_where.ui.common.AddEventDialog
 import com.example.now_where.ui.common.NowWhereTopBar
 import com.example.now_where.ui.common.ProfileScreen
@@ -76,6 +77,12 @@ fun HomeScreen(
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
     var showAddDialog by remember { mutableStateOf(false) }
+    var editingEvent by remember { mutableStateOf<Event?>(null) }
+
+    val onEventClick: (Event) -> Unit = { event ->
+        editingEvent = event
+        showAddDialog = true
+    }
 
     Column(
         Modifier
@@ -99,11 +106,13 @@ fun HomeScreen(
                         when (state.visualization) {
                             VisualizationType.ROUTE -> RouteVisualization(
                                 day = state.day,
-                                modifier = Modifier.fillMaxSize()
+                                modifier = Modifier.fillMaxSize(),
+                                onEventClick = onEventClick
                             )
                             VisualizationType.DISTANCE -> DistanceVisualization(
                                 day = state.day,
-                                modifier = Modifier.fillMaxSize()
+                                modifier = Modifier.fillMaxSize(),
+                                onEventClick = onEventClick
                             )
                             VisualizationType.DAYPROGRESS -> DayProgressVisualization(
                                 day = state.day,
@@ -123,7 +132,8 @@ fun HomeScreen(
                             )
                             VisualizationType.LADDER -> LadderVisualization(
                                 day = state.day,
-                                modifier = Modifier.fillMaxSize()
+                                modifier = Modifier.fillMaxSize(),
+                                onEventClick = onEventClick
                             )
                             VisualizationType.WATER -> WaterFlowVisualization(
                                 day = state.day,
@@ -136,7 +146,10 @@ fun HomeScreen(
                         CircleIconButton(
                             icon = Icons.Filled.Add,
                             contentDescription = "Add an event",
-                            onClick = { showAddDialog = true },
+                            onClick = {
+                                editingEvent = null
+                                showAddDialog = true
+                            },
                             size = 56.dp,
                             modifier = Modifier
                                 .align(Alignment.BottomCenter)
@@ -176,11 +189,28 @@ fun HomeScreen(
 
     if (showAddDialog) {
         AddEventDialog(
-            onDismiss = { showAddDialog = false },
+            onDismiss = {
+                showAddDialog = false
+                editingEvent = null
+            },
             onAdd = { draft ->
                 viewModel.addEvent(draft)
                 showAddDialog = false
+                editingEvent = null
             },
+            onUpdate = { draft ->
+                editingEvent?.let { viewModel.updateEvent(it.id, draft) }
+                showAddDialog = false
+                editingEvent = null
+            },
+            onDelete = if (editingEvent != null) {
+                {
+                    editingEvent?.let { viewModel.deleteEvent(it.id) }
+                    showAddDialog = false
+                    editingEvent = null
+                }
+            } else null,
+            editingEvent = editingEvent,
             notation = state.notation
         )
     }

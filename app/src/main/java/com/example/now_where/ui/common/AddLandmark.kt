@@ -45,7 +45,9 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AddCircleOutline
+import androidx.compose.material.icons.filled.CheckCircleOutline
 import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.DeleteOutline
 import androidx.compose.material.icons.filled.DonutLarge
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -81,11 +83,12 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
+import com.example.now_where.domain.Event
 import com.example.now_where.domain.TimeNotation
 import kotlinx.coroutines.delay
 
 // ---------------------------------------------------------------------------
-// Palette (dark UI from the design). Swap for NowWhereColors if you have matches.
+// Palette (dark UI from the design)
 // ---------------------------------------------------------------------------
 
 private object Ppal {
@@ -111,7 +114,6 @@ private val Mono = FontFamily.Monospace
 
 /**
  * What the sheet hands back. Times are minutes since midnight (0..1439).
- * Map this to your own Event type in the caller.
  */
 data class NewEventDraft(
     val title: String,
@@ -121,13 +123,16 @@ data class NewEventDraft(
 )
 
 // ---------------------------------------------------------------------------
-// Dialog wrapper: full screen, opened by the shared "+" button
+// Dialog wrapper: full screen, opened by "+" or by clicking an event
 // ---------------------------------------------------------------------------
 
 @Composable
 fun AddEventDialog(
     onDismiss: () -> Unit,
     onAdd: (NewEventDraft) -> Unit,
+    onUpdate: ((NewEventDraft) -> Unit)? = null,
+    onDelete: (() -> Unit)? = null,
+    editingEvent: Event? = null,
     notation: TimeNotation = TimeNotation.H12,
     initialStartMinutes: Int = 17 * 60,
     motion: Boolean = true
@@ -139,6 +144,9 @@ fun AddEventDialog(
         AddEventSheet(
             onDismiss = onDismiss,
             onAdd = onAdd,
+            onUpdate = onUpdate,
+            onDelete = onDelete,
+            editingEvent = editingEvent,
             notation = notation,
             initialStartMinutes = initialStartMinutes,
             motion = motion
@@ -154,22 +162,29 @@ fun AddEventDialog(
 fun AddEventSheet(
     onDismiss: () -> Unit,
     onAdd: (NewEventDraft) -> Unit,
+    onUpdate: ((NewEventDraft) -> Unit)? = null,
+    onDelete: (() -> Unit)? = null,
+    editingEvent: Event? = null,
     modifier: Modifier = Modifier,
     notation: TimeNotation = TimeNotation.H12,
     initialStartMinutes: Int = 17 * 60,
     initialTitle: String = "",
     motion: Boolean = true
 ) {
-    var title by remember { mutableStateOf(initialTitle) }
-    var description by remember { mutableStateOf("") }
+    val isEditing = editingEvent != null
+    val defaultStart = editingEvent?.let { it.start.hour * 60 + it.start.minute } ?: initialStartMinutes
+    val defaultEnd = editingEvent?.let { it.end.hour * 60 + it.end.minute } ?: (defaultStart + 90)
+
+    var title by remember(editingEvent) { mutableStateOf(editingEvent?.title ?: initialTitle) }
+    var description by remember(editingEvent) { mutableStateOf("") }
     var descriptionOpen by remember { mutableStateOf(false) }
-    var start by remember { mutableIntStateOf(initialStartMinutes.coerceIn(0, 1439)) }
-    var end by remember { mutableIntStateOf((initialStartMinutes + 90).coerceIn(0, 1439)) }
+    var start by remember(editingEvent) { mutableIntStateOf(defaultStart.coerceIn(0, 1439)) }
+    var end by remember(editingEvent) { mutableIntStateOf(defaultEnd.coerceIn(0, 1439)) }
     var picking by remember { mutableStateOf<Which?>(null) }
 
     val duration = end - start
     val timesValid = duration > 0
-    val canAdd = title.isNotBlank() && timesValid
+    val canSave = title.isNotBlank() && timesValid
 
     Column(
         modifier = modifier
@@ -190,9 +205,14 @@ fun AddEventSheet(
             verticalAlignment = Alignment.Top
         ) {
             Column(modifier = Modifier.weight(1f)) {
-                Text("What’s coming?", fontSize = 28.sp, fontWeight = FontWeight.SemiBold, color = Ppal.Ink)
                 Text(
-                    "Place a landmark on your horizon.",
+                    if (isEditing) "Edit Landmark" else "What’s coming?",
+                    fontSize = 28.sp,
+                    fontWeight = FontWeight.SemiBold,
+                    color = Ppal.Ink
+                )
+                Text(
+                    if (isEditing) "Update your landmark on the horizon." else "Place a landmark on your horizon.",
                     fontSize = 14.sp,
                     color = Ppal.Sub,
                     modifier = Modifier.padding(top = 4.dp)
@@ -238,20 +258,33 @@ fun AddEventSheet(
         Spacer(Modifier.height(44.dp))
 
         AddButton(
-            enabled = canAdd,
+            enabled = canSave,
+            isEditing = isEditing,
             motion = motion,
             modifier = Modifier.enterAnimation(250, motion),
             onClick = {
-                onAdd(
-                    NewEventDraft(
-                        title = title.trim(),
-                        description = description.trim(),
-                        startMinutes = start,
-                        endMinutes = end
-                    )
+                val draft = NewEventDraft(
+                    title = title.trim(),
+                    description = description.trim(),
+                    startMinutes = start,
+                    endMinutes = end
                 )
+                if (isEditing && onUpdate != null) {
+                    onUpdate(draft)
+                } else {
+                    onAdd(draft)
+                }
             }
         )
+
+        if (onDelete != null) {
+            Spacer(Modifier.height(14.dp))
+            DeleteButton(
+                motion = motion,
+                modifier = Modifier.enterAnimation(290, motion),
+                onClick = onDelete
+            )
+        }
 
         Box(
             modifier = Modifier
@@ -276,7 +309,6 @@ fun AddEventSheet(
             onDismiss = { picking = null },
             onConfirm = { m ->
                 if (which == Which.Entry) {
-                    // Keep the same length when the start moves, as long as it still fits in the day.
                     val keep = (end - start).coerceAtLeast(30)
                     start = m
                     end = (m + keep).coerceAtMost(1439)
@@ -319,7 +351,6 @@ private fun IdentityCard(
             runCatching { descFocus.requestFocus() }
         }
     }
-    // An existing description keeps the field open
     val showField = descriptionOpen || description.isNotEmpty()
 
     Column(
@@ -375,7 +406,6 @@ private fun IdentityCard(
             )
         }
 
-        // Description: a quiet "add" link that opens a multi-line field
         AnimatedVisibility(
             visible = !showField,
             enter = fadeIn(),
@@ -578,6 +608,7 @@ private fun TimeBox(
 @Composable
 private fun AddButton(
     enabled: Boolean,
+    isEditing: Boolean = false,
     motion: Boolean,
     onClick: () -> Unit,
     modifier: Modifier = Modifier
@@ -615,16 +646,64 @@ private fun AddButton(
         verticalAlignment = Alignment.CenterVertically
     ) {
         Icon(
-            Icons.Default.AddCircleOutline,
+            if (isEditing) Icons.Default.CheckCircleOutline else Icons.Default.AddCircleOutline,
             contentDescription = null,
             tint = Ppal.OnOrange,
             modifier = Modifier.size(26.dp)
         )
         Text(
-            "Add to my day",
+            if (isEditing) "Save Changes" else "Add to my day",
             fontSize = 21.sp,
             fontWeight = FontWeight.Medium,
             color = Ppal.OnOrange,
+            textAlign = TextAlign.Center,
+            modifier = Modifier.padding(start = 10.dp)
+        )
+    }
+}
+
+@Composable
+private fun DeleteButton(
+    motion: Boolean,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    val source = remember { MutableInteractionSource() }
+    val pressed by source.collectIsPressedAsState()
+    val scale by animateFloatAsState(
+        targetValue = if (pressed) 0.97f else 1f,
+        animationSpec = if (motion) spring(dampingRatio = 0.6f, stiffness = Spring.StiffnessMedium) else snap(),
+        label = "delScale"
+    )
+    val shape = RoundedCornerShape(18.dp)
+
+    Row(
+        modifier = modifier
+            .fillMaxWidth()
+            .graphicsLayer { scaleX = scale; scaleY = scale }
+            .clip(shape)
+            .background(Color(0x28F2A98C))
+            .border(1.dp, Color(0xFFF2A98C), shape)
+            .clickable(
+                interactionSource = source,
+                indication = null,
+                onClick = onClick
+            )
+            .padding(vertical = 16.dp),
+        horizontalArrangement = Arrangement.Center,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Icon(
+            Icons.Default.DeleteOutline,
+            contentDescription = "Delete Event",
+            tint = Color(0xFFF2A98C),
+            modifier = Modifier.size(24.dp)
+        )
+        Text(
+            "Delete Landmark",
+            fontSize = 18.sp,
+            fontWeight = FontWeight.Medium,
+            color = Color(0xFFF2A98C),
             textAlign = TextAlign.Center,
             modifier = Modifier.padding(start = 10.dp)
         )
@@ -718,7 +797,6 @@ private fun TimePickDialog(
 // Formatting helpers
 // ---------------------------------------------------------------------------
 
-/** "05:00" with "PM" in 12-hour mode, "17:00" with no suffix in 24-hour mode. */
 private fun formatClock(minutes: Int, notation: TimeNotation): Pair<String, String?> {
     val h = (minutes / 60) % 24
     val m = minutes % 60
@@ -730,7 +808,6 @@ private fun formatClock(minutes: Int, notation: TimeNotation): Pair<String, Stri
     }
 }
 
-/** 90 -> "1 hr 30 mins", 60 -> "1 hr", 45 -> "45 mins". */
 private fun formatDuration(minutes: Int): String {
     val h = minutes / 60
     val m = minutes % 60
@@ -741,7 +818,6 @@ private fun formatDuration(minutes: Int): String {
     }
 }
 
-/** Fade + slide-up played once when the item first appears. Skipped when motion is off. */
 private fun Modifier.enterAnimation(delayMs: Int, enabled: Boolean): Modifier = composed {
     val progress = remember { Animatable(if (enabled) 0f else 1f) }
     LaunchedEffect(Unit) {

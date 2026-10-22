@@ -12,6 +12,7 @@ import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
@@ -223,7 +224,8 @@ private fun buildLadder(day: DayState): List<Rung> {
 @Composable
 fun LadderVisualization(
     day: DayState,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    onEventClick: (Event) -> Unit = {}
 ) {
     val ladder = remember(day) { buildLadder(day) }
     val remainingTasks = ladder.count { (it.kind == RungKind.FUTURE || it.kind == RungKind.NEXT) && it.event != null }
@@ -304,7 +306,8 @@ fun LadderVisualization(
                             pulse = pulse,
                             day = day,
                             nowMinute = nowMinute,
-                            allEvents = day.events
+                            allEvents = day.events,
+                            onClick = { rung.event?.let(onEventClick) }
                         )
                     }
                     Spacer(Modifier.height(96.dp)) // room for the common AddButton
@@ -388,7 +391,8 @@ private fun RungRow(
     pulse: Float,
     day: DayState,
     nowMinute: Int,
-    allEvents: List<Event>
+    allEvents: List<Event>,
+    onClick: () -> Unit = {}
 ) {
     // Rungs further from NOW fade away, so attention stays on where you are
     val distanceFade = when (rung.kind) {
@@ -403,6 +407,7 @@ private fun RungRow(
             .fillMaxWidth()
             .height(rung.height)
             .graphicsLayer { alpha = appear * distanceFade }
+            .then(if (rung.event != null) Modifier.clickable(onClick = onClick) else Modifier)
     ) {
         // Left: time
         Box(

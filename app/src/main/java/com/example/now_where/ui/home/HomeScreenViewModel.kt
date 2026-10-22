@@ -1,6 +1,7 @@
 package com.example.now_where.ui.home
 
-import androidx.lifecycle.ViewModel
+import android.app.Application
+import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.now_where.data.EventRepository
 import com.example.now_where.data.InMemoryuEventRepository
@@ -14,7 +15,6 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.WhileSubscribed
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
 import java.time.LocalDate
@@ -30,10 +30,11 @@ data class HomeUiState(
     val haptics: Boolean = true,
 )
 
-class HomeViewModel(
-    private val repository: EventRepository = InMemoryuEventRepository(),
+class HomeViewModel @JvmOverloads constructor(
+    application: Application,
+    private val repository: EventRepository = InMemoryuEventRepository(application.applicationContext),
     ticker: Flow<LocalDateTime> = NowTicker(),
-) : ViewModel() {
+) : AndroidViewModel(application) {
 
     private val _visualization = MutableStateFlow(VisualizationType.ROUTE)
     private val _currentScreen = MutableStateFlow(Screen.MAIN)
@@ -92,5 +93,22 @@ class HomeViewModel(
             end = end,
         )
         repository.addEvent(newEvent)
+    }
+
+    fun updateEvent(eventId: Long, draft: NewEventDraft) {
+        val today = LocalDate.now()
+        val start = today.atTime(draft.startMinutes / 60, draft.startMinutes % 60)
+        val end = today.atTime(draft.endMinutes / 60, draft.endMinutes % 60)
+        val updated = Event(
+            id = eventId,
+            title = draft.title,
+            start = start,
+            end = end,
+        )
+        repository.updateEvent(updated)
+    }
+
+    fun deleteEvent(eventId: Long) {
+        repository.deleteEvent(eventId)
     }
 }
