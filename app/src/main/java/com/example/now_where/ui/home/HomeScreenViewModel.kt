@@ -1,6 +1,7 @@
 package com.example.now_where.ui.home
 
 import android.app.Application
+import android.content.Context
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.now_where.data.EventRepository
@@ -18,6 +19,7 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.launch
 import java.time.LocalDate
 import java.time.LocalDateTime
 
@@ -35,26 +37,18 @@ class HomeViewModel @JvmOverloads constructor(
     application: Application,
     private val repository: EventRepository = InMemoryuEventRepository(application.applicationContext),
     ticker: Flow<LocalDateTime> = NowTicker(),
-) : AndroidViewModel(application) {
+    reachTicker: Flow<LocalDateTime> = NowTicker(1_000L),
 
+    ) : AndroidViewModel(application) {
+
+    private val settings = application.getSharedPreferences("nowwhere_settings", Context.MODE_PRIVATE)
     private val _visualization = MutableStateFlow(VisualizationType.ROUTE)
     private val _currentScreen = MutableStateFlow(Screen.MAIN)
     private val _notation = MutableStateFlow(TimeNotation.H24)
     private val _haptics = MutableStateFlow(true)
-    private val vibratedEventIds = mutableSetOf<Long>()
 
     val uiState: StateFlow<HomeUiState> = combine(
-        combine(ticker, repository.events) { now, events ->
-            // Check for ongoing events that haven't triggered strong vibration yet
-            val activeEvents = events.filter { it.start <= now && now < it.end }
-            for (event in activeEvents) {
-                if (event.id !in vibratedEventIds) {
-                    vibratedEventIds.add(event.id)
-                    // Trigger STRONG vibration regardless of user haptics setting
-                    VibrationHelper.triggerStrongEventVibration(getApplication())
-                }
-            }
-            now to events
+        combine(ticker, repository.events) { now, events -> now to events
         },
         _visualization,
         _currentScreen,
@@ -75,10 +69,35 @@ class HomeViewModel @JvmOverloads constructor(
             visualization = VisualizationType.ROUTE,
             currentScreen = Screen.MAIN,
             notation = TimeNotation.H24,
-            haptics = true,
+            haptics = _haptics.value,
         ),
     )
 
+    private var lastTick: LocalDateTime? = null
+    private val vibratedForStart = HashMap<Long, LocalDateTime>()
+
+    init {
+        viewModelScope.launch {
+            combine(reachTicker, repository.events) { now, events -> now to events }
+                .collect { (now, events) -> checkReached(now, events) }
+        }
+    }
+
+    private fun checkReached(now: LocalDateTime, events: List<Event>) {
+        val previous = lastTick
+        lastTick = now
+        vibratedForStart.keys.retainAll(events.map { it.id }.toSet())
+        if (previous == null) return // first tick: nothing counts as "reached" yet
+
+        for (event in events) {
+            val crossed = previous < event.start && event.start <= now
+            if (crossed && vibratedForStart[event.id] != event.start) {
+                vibratedForStart[event.id] = event.start
+                // Strong vibration is NOT tied to the haptics toggle
+                VibrationHelper.triggerStrongEventVibration(getApplication())
+            }
+        }
+    }
     fun navigateTo(screen: Screen) {
         _currentScreen.value = screen
     }
@@ -93,6 +112,8 @@ class HomeViewModel @JvmOverloads constructor(
 
     fun setHaptics(enabled: Boolean) {
         _haptics.value = enabled
+        settings.edit().putBoolean(KEY_HAPTICS, enabled).apply() // survives app restarts
+
     }
 
     fun addEvent(draft: NewEventDraft) {
@@ -123,5 +144,9 @@ class HomeViewModel @JvmOverloads constructor(
 
     fun deleteEvent(eventId: Long) {
         repository.deleteEvent(eventId)
+    }
+
+    private companion object {
+        const val KEY_HAPTICS = "haptics"
     }
 }

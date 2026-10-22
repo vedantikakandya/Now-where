@@ -109,18 +109,12 @@ fun ProfileScreen(
     onDefaultVisualizationClick: () -> Unit,
     onNotationChange: (TimeNotation) -> Unit,
     onHapticsChange: (Boolean) -> Unit,
-    onLogOut: () -> Unit,
-    onDeleteAccount: () -> Unit,
     modifier: Modifier = Modifier,
     motion: Boolean = true,
     appVersion: String = "0.9.4"
 ) {
     val context = LocalContext.current
-    fun tick() {
-        VibrationHelper.performTouchHaptic(context, state.haptics)
-    }
 
-    var confirmDelete by remember { mutableStateOf(false) }
     var showPrivacy by remember { mutableStateOf(false) }
 
     Column(
@@ -189,7 +183,7 @@ fun ProfileScreen(
                     motion = motion,
                     onSelect = {
                         if (it != state.notation) {
-                            tick()
+
                             onNotationChange(it)
                         }
                     }
@@ -207,7 +201,7 @@ fun ProfileScreen(
                     checked = state.haptics,
                     motion = motion,
                     onCheckedChange = {
-                        if (it) tick()
+                        if (it) VibrationHelper.performTouchHaptic(context, true)
                         onHapticsChange(it)
                     }
                 )
@@ -223,7 +217,6 @@ fun ProfileScreen(
                 title = "Your privacy",
                 subtitle = "How Nowhere handles your data",
                 onClick = {
-                    tick()
                     showPrivacy = true
                 }
             ) {
@@ -266,28 +259,7 @@ fun ProfileScreen(
         PrivacyPolicyDialog(onDismiss = { showPrivacy = false }, motion = motion)
     }
 
-    if (confirmDelete) {
-        AlertDialog(
-            onDismissRequest = { confirmDelete = false },
-            containerColor = Pal.Card,
-            title = { Text("Delete account?", color = Pal.Ink) },
-            text = {
-                Text(
-                    "This erases all local anchors and data. It can't be undone.",
-                    color = Pal.Sub
-                )
-            },
-            confirmButton = {
-                TextButton(onClick = {
-                    confirmDelete = false
-                    onDeleteAccount()
-                }) { Text("Delete account", color = Pal.Salmon) }
-            },
-            dismissButton = {
-                TextButton(onClick = { confirmDelete = false }) { Text("Cancel", color = Pal.Sub) }
-            }
-        )
-    }
+
 }
 
 // ---------------------------------------------------------------------------
@@ -528,7 +500,7 @@ private fun ProfilePreview() {
         onDefaultVisualizationClick = {},
         onNotationChange = { state = state.copy(notation = it) },
         onHapticsChange = { state = state.copy(haptics = it) },
-        onLogOut = {},
-        onDeleteAccount = {}
+
+
     )
 }

@@ -85,6 +85,7 @@ import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import com.example.now_where.domain.Event
 import com.example.now_where.domain.TimeNotation
+import com.example.now_where.ui.theme.touchHaptics
 import kotlinx.coroutines.delay
 
 // ---------------------------------------------------------------------------
@@ -188,6 +189,7 @@ fun AddEventSheet(
 
     Column(
         modifier = modifier
+            .touchHaptics()
             .fillMaxSize()
             .background(Ppal.Bg)
             .statusBarsPadding()
@@ -731,6 +733,7 @@ private fun TimePickDialog(
     Dialog(onDismissRequest = onDismiss) {
         Column(
             modifier = Modifier
+                .touchHaptics()
                 .clip(RoundedCornerShape(26.dp))
                 .background(Ppal.Card)
                 .padding(24.dp),

@@ -41,6 +41,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
+import com.example.now_where.ui.theme.touchHaptics
 
 // ---------------------------------------------------------------------------
 // Palette (same dark UI as ProfileScreen)
@@ -181,6 +182,8 @@ fun PrivacyPolicyDialog(
 
         Column(
             modifier = Modifier
+                .touchHaptics()
+
                 .padding(horizontal = 20.dp, vertical = 24.dp)
                 .fillMaxWidth()
                 .heightIn(max = 700.dp)

@@ -15,6 +15,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material3.Icon
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -38,8 +39,10 @@ import com.example.now_where.ui.common.ProfileScreen
 import com.example.now_where.ui.common.ProfileUiState
 import com.example.now_where.ui.common.SelectTimePreferenceScreen
 import com.example.now_where.ui.common.TimePerception
+import com.example.now_where.ui.theme.LocalHapticsEnabled
 import com.example.now_where.ui.theme.NowWhereColors
 import com.example.now_where.ui.theme.VibrationHelper
+import com.example.now_where.ui.theme.touchHaptics
 import com.example.now_where.ui.visualization.VisualizationType
 import com.example.now_where.ui.visualization.block.BlocksVisualization
 import com.example.now_where.ui.visualization.circular_day.CircularDayVisualization
@@ -87,138 +90,148 @@ fun HomeScreen(
         editingEvent = event
         showAddDialog = true
     }
+    CompositionLocalProvider(LocalHapticsEnabled provides state.haptics) {
 
-    Column(
-        Modifier
-            .fillMaxSize()
-            .background(NowWhereColors.Background)
-    ) {
-        // Top app bar is present at all times!
-        NowWhereTopBar(
-            onLogoClick = { viewModel.navigateTo(Screen.PROFILE) },
-            onPreferenceClick = { viewModel.navigateTo(Screen.SELECT_TIME_PREFERENCE) },
-            haptics = state.haptics
-        )
-
-        Box(
+        Column(
             Modifier
-                .weight(1f)
-                .fillMaxWidth()
+                .fillMaxSize()
+                .background(NowWhereColors.Background).touchHaptics()
         ) {
-            when (state.currentScreen) {
-                Screen.MAIN -> {
-                    Box(Modifier.fillMaxSize()) {
-                        when (state.visualization) {
-                            VisualizationType.ROUTE -> RouteVisualization(
-                                day = state.day,
-                                modifier = Modifier.fillMaxSize(),
-                                onEventClick = onEventClick
-                            )
-                            VisualizationType.DISTANCE -> DistanceVisualization(
-                                day = state.day,
-                                modifier = Modifier.fillMaxSize(),
-                                onEventClick = onEventClick
-                            )
-                            VisualizationType.DAYPROGRESS -> DayProgressVisualization(
-                                day = state.day,
-                                modifier = Modifier.fillMaxSize()
-                            )
-                            VisualizationType.BLOCK -> BlocksVisualization(
-                                day = state.day,
-                                modifier = Modifier.fillMaxSize()
-                            )
-                            VisualizationType.CIRCULAR -> CircularDayVisualization(
-                                day = state.day,
-                                modifier = Modifier.fillMaxSize()
-                            )
-                            VisualizationType.CLOCK -> ClockVisualization(
-                                day = state.day,
-                                modifier = Modifier.fillMaxSize()
-                            )
-                            VisualizationType.LADDER -> LadderVisualization(
-                                day = state.day,
-                                modifier = Modifier.fillMaxSize(),
-                                onEventClick = onEventClick
-                            )
-                            VisualizationType.WATER -> WaterFlowVisualization(
-                                day = state.day,
-                                modifier = Modifier.fillMaxSize()
+            // Top app bar is present at all times!
+            NowWhereTopBar(
+                onLogoClick = { viewModel.navigateTo(Screen.PROFILE) },
+                onPreferenceClick = { viewModel.navigateTo(Screen.SELECT_TIME_PREFERENCE) },
+                haptics = state.haptics
+            )
+
+            Box(
+                Modifier
+                    .weight(1f)
+                    .fillMaxWidth()
+            ) {
+                when (state.currentScreen) {
+                    Screen.MAIN -> {
+                        Box(Modifier.fillMaxSize()) {
+                            when (state.visualization) {
+                                VisualizationType.ROUTE -> RouteVisualization(
+                                    day = state.day,
+                                    modifier = Modifier.fillMaxSize(),
+                                    onEventClick = onEventClick
+                                )
+
+                                VisualizationType.DISTANCE -> DistanceVisualization(
+                                    day = state.day,
+                                    modifier = Modifier.fillMaxSize(),
+                                    onEventClick = onEventClick
+                                )
+
+                                VisualizationType.DAYPROGRESS -> DayProgressVisualization(
+                                    day = state.day,
+                                    modifier = Modifier.fillMaxSize()
+                                )
+
+                                VisualizationType.BLOCK -> BlocksVisualization(
+                                    day = state.day,
+                                    modifier = Modifier.fillMaxSize()
+                                )
+
+                                VisualizationType.CIRCULAR -> CircularDayVisualization(
+                                    day = state.day,
+                                    modifier = Modifier.fillMaxSize()
+                                )
+
+                                VisualizationType.CLOCK -> ClockVisualization(
+                                    day = state.day,
+                                    modifier = Modifier.fillMaxSize()
+                                )
+
+                                VisualizationType.LADDER -> LadderVisualization(
+                                    day = state.day,
+                                    modifier = Modifier.fillMaxSize(),
+                                    onEventClick = onEventClick
+                                )
+
+                                VisualizationType.WATER -> WaterFlowVisualization(
+                                    day = state.day,
+                                    modifier = Modifier.fillMaxSize()
+                                )
+                            }
+
+                            EdgeFade(top = false, modifier = Modifier.align(Alignment.BottomCenter))
+
+                            CircleIconButton(
+                                icon = Icons.Filled.Add,
+                                contentDescription = "Add an event",
+                                onClick = {
+                                    editingEvent = null
+                                    showAddDialog = true
+                                },
+                                size = 56.dp,
+                                modifier = Modifier
+                                    .align(Alignment.BottomCenter)
+                                    .navigationBarsPadding()
+                                    .padding(bottom = 24.dp),
                             )
                         }
+                    }
 
-                        EdgeFade(top = false, modifier = Modifier.align(Alignment.BottomCenter))
+                    Screen.PROFILE -> {
+                        ProfileScreen(
+                            state = ProfileUiState(
+                                defaultVisualizationName = state.visualization.toTimePerception().title,
+                                notation = state.notation,
+                                haptics = state.haptics,
+                            ),
+                            onBack = { viewModel.navigateTo(Screen.MAIN) },
+                            onDefaultVisualizationClick = { viewModel.navigateTo(Screen.SELECT_TIME_PREFERENCE) },
+                            onNotationChange = { viewModel.setNotation(it) },
+                            onHapticsChange = { viewModel.setHaptics(it) },
+                            onLogOut = { viewModel.navigateTo(Screen.MAIN) },
+                            onDeleteAccount = { viewModel.navigateTo(Screen.MAIN) }
+                        )
+                    }
 
-                        CircleIconButton(
-                            icon = Icons.Filled.Add,
-                            contentDescription = "Add an event",
-                            onClick = {
-                                VibrationHelper.performTouchHaptic(context, state.haptics)
-                                editingEvent = null
-                                showAddDialog = true
+                    Screen.SELECT_TIME_PREFERENCE -> {
+                        SelectTimePreferenceScreen(
+                            current = state.visualization.toTimePerception(),
+                            onConfirm = { perception ->
+                                viewModel.setVisualization(perception.toVisualizationType())
+                                viewModel.navigateTo(Screen.MAIN)
                             },
-                            size = 56.dp,
-                            modifier = Modifier
-                                .align(Alignment.BottomCenter)
-                                .navigationBarsPadding()
-                                .padding(bottom = 24.dp),
+                            haptics = state.haptics
                         )
                     }
                 }
-                Screen.PROFILE -> {
-                    ProfileScreen(
-                        state = ProfileUiState(
-                            defaultVisualizationName = state.visualization.toTimePerception().title,
-                            notation = state.notation,
-                            haptics = state.haptics,
-                        ),
-                        onBack = { viewModel.navigateTo(Screen.MAIN) },
-                        onDefaultVisualizationClick = { viewModel.navigateTo(Screen.SELECT_TIME_PREFERENCE) },
-                        onNotationChange = { viewModel.setNotation(it) },
-                        onHapticsChange = { viewModel.setHaptics(it) },
-                        onLogOut = { viewModel.navigateTo(Screen.MAIN) },
-                        onDeleteAccount = { viewModel.navigateTo(Screen.MAIN) }
-                    )
-                }
-                Screen.SELECT_TIME_PREFERENCE -> {
-                    SelectTimePreferenceScreen(
-                        current = state.visualization.toTimePerception(),
-                        onConfirm = { perception ->
-                            viewModel.setVisualization(perception.toVisualizationType())
-                            viewModel.navigateTo(Screen.MAIN)
-                        },
-                        haptics = state.haptics
-                    )
-                }
             }
         }
-    }
 
-    if (showAddDialog) {
-        AddEventDialog(
-            onDismiss = {
-                showAddDialog = false
-                editingEvent = null
-            },
-            onAdd = { draft ->
-                viewModel.addEvent(draft)
-                showAddDialog = false
-                editingEvent = null
-            },
-            onUpdate = { draft ->
-                editingEvent?.let { viewModel.updateEvent(it.id, draft) }
-                showAddDialog = false
-                editingEvent = null
-            },
-            onDelete = if (editingEvent != null) {
-                {
-                    editingEvent?.let { viewModel.deleteEvent(it.id) }
+        if (showAddDialog) {
+            AddEventDialog(
+                onDismiss = {
                     showAddDialog = false
                     editingEvent = null
-                }
-            } else null,
-            editingEvent = editingEvent,
-            notation = state.notation
-        )
+                },
+                onAdd = { draft ->
+                    viewModel.addEvent(draft)
+                    showAddDialog = false
+                    editingEvent = null
+                },
+                onUpdate = { draft ->
+                    editingEvent?.let { viewModel.updateEvent(it.id, draft) }
+                    showAddDialog = false
+                    editingEvent = null
+                },
+                onDelete = if (editingEvent != null) {
+                    {
+                        editingEvent?.let { viewModel.deleteEvent(it.id) }
+                        showAddDialog = false
+                        editingEvent = null
+                    }
+                } else null,
+                editingEvent = editingEvent,
+                notation = state.notation
+            )
+        }
     }
 }
 

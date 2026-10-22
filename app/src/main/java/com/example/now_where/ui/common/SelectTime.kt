@@ -142,9 +142,7 @@ fun SelectTimePreferenceScreen(
                     selected = option == selected,
                     motion = motion,
                     onClick = {
-                        if (option != selected) {
-                            VibrationHelper.performTouchHaptic(context, haptics)
-                        }
+
                         selected = option
                     },
                     modifier = Modifier.enterAnimation(80 + i * 45, motion)
@@ -165,7 +163,6 @@ fun SelectTimePreferenceScreen(
                 enabled = selected != null,
                 motion = motion,
                 onClick = {
-                    VibrationHelper.performTouchHaptic(context, haptics)
                     selected?.let(onConfirm)
                 }
             )

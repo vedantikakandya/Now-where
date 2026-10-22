@@ -39,7 +39,6 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.example.now_where.R
-import com.example.now_where.ui.theme.VibrationHelper
 
 private object Pall {
     val Bg = Color(0xFF070E15)
@@ -82,7 +81,6 @@ fun NowWhereTopBar(
         PressableCircle(
             size = 42,
             onClick = {
-                VibrationHelper.performTouchHaptic(context, haptics)
                 onLogoClick()
             },
             motion = motion,
@@ -95,7 +93,6 @@ fun NowWhereTopBar(
         PressableCircle(
             size = 42,
             onClick = {
-                VibrationHelper.performTouchHaptic(context, haptics)
                 onPreferenceClick()
             },
             motion = motion,
