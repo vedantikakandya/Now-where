@@ -25,7 +25,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
@@ -80,10 +80,10 @@ fun HomeScreen(
     val state by viewModel.uiState.collectAsStateWithLifecycle()
     var showAddDialog by remember { mutableStateOf(false) }
     var editingEvent by remember { mutableStateOf<Event?>(null) }
-    val haptic = LocalHapticFeedback.current
+    val context = LocalContext.current
 
     val onEventClick: (Event) -> Unit = { event ->
-        VibrationHelper.performTouchHaptic(haptic, state.haptics)
+        VibrationHelper.performTouchHaptic(context, state.haptics)
         editingEvent = event
         showAddDialog = true
     }
@@ -152,7 +152,7 @@ fun HomeScreen(
                             icon = Icons.Filled.Add,
                             contentDescription = "Add an event",
                             onClick = {
-                                VibrationHelper.performTouchHaptic(haptic, state.haptics)
+                                VibrationHelper.performTouchHaptic(context, state.haptics)
                                 editingEvent = null
                                 showAddDialog = true
                             },

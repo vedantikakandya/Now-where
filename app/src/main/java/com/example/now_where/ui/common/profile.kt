@@ -31,8 +31,6 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
-import androidx.compose.material.icons.automirrored.filled.Logout
-import androidx.compose.material.icons.filled.DeleteForever
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
@@ -49,8 +47,8 @@ import androidx.compose.ui.composed
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
-import androidx.compose.ui.hapticfeedback.HapticFeedbackType
-import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.compose.ui.platform.LocalContext
+import com.example.now_where.ui.theme.VibrationHelper
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
@@ -117,9 +115,9 @@ fun ProfileScreen(
     motion: Boolean = true,
     appVersion: String = "0.9.4"
 ) {
-    val haptic = LocalHapticFeedback.current
+    val context = LocalContext.current
     fun tick() {
-        if (state.haptics) haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+        VibrationHelper.performTouchHaptic(context, state.haptics)
     }
 
     var confirmDelete by remember { mutableStateOf(false) }
@@ -209,7 +207,7 @@ fun ProfileScreen(
                     checked = state.haptics,
                     motion = motion,
                     onCheckedChange = {
-                        if (it) haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                        if (it) tick()
                         onHapticsChange(it)
                     }
                 )

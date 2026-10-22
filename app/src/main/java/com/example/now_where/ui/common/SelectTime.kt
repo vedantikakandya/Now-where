@@ -60,8 +60,8 @@ import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.graphicsLayer
-import androidx.compose.ui.hapticfeedback.HapticFeedbackType
-import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.compose.ui.platform.LocalContext
+import com.example.now_where.ui.theme.VibrationHelper
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
@@ -69,7 +69,6 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import kotlin.math.PI
-import kotlin.math.cos
 import kotlin.math.sin
 import kotlinx.coroutines.delay
 
@@ -128,7 +127,7 @@ fun SelectTimePreferenceScreen(
     haptics: Boolean = true
 ) {
     var selected by remember { mutableStateOf(current) }
-    val haptic = LocalHapticFeedback.current
+    val context = LocalContext.current
 
     Box(modifier = modifier.fillMaxSize().background(Paal.Bg)) {
         LazyColumn(
@@ -143,8 +142,8 @@ fun SelectTimePreferenceScreen(
                     selected = option == selected,
                     motion = motion,
                     onClick = {
-                        if (haptics && option != selected) {
-                            haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                        if (option != selected) {
+                            VibrationHelper.performTouchHaptic(context, haptics)
                         }
                         selected = option
                     },
@@ -165,7 +164,10 @@ fun SelectTimePreferenceScreen(
             UseThisButton(
                 enabled = selected != null,
                 motion = motion,
-                onClick = { selected?.let(onConfirm) }
+                onClick = {
+                    VibrationHelper.performTouchHaptic(context, haptics)
+                    selected?.let(onConfirm)
+                }
             )
         }
     }

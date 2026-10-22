@@ -34,7 +34,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
-import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -68,7 +68,7 @@ fun NowWhereTopBar(
         )
     }
 ) {
-    val haptic = LocalHapticFeedback.current
+    val context = LocalContext.current
 
     Row(
         modifier = modifier
@@ -82,7 +82,7 @@ fun NowWhereTopBar(
         PressableCircle(
             size = 42,
             onClick = {
-                VibrationHelper.performTouchHaptic(haptic, haptics)
+                VibrationHelper.performTouchHaptic(context, haptics)
                 onLogoClick()
             },
             motion = motion,
@@ -95,7 +95,7 @@ fun NowWhereTopBar(
         PressableCircle(
             size = 42,
             onClick = {
-                VibrationHelper.performTouchHaptic(haptic, haptics)
+                VibrationHelper.performTouchHaptic(context, haptics)
                 onPreferenceClick()
             },
             motion = motion,
