@@ -34,15 +34,16 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.example.now_where.R
+import com.example.now_where.ui.theme.VibrationHelper
 
 private object Pall {
     val Bg = Color(0xFF070E15)
     val Card = Color(0xFF19222D)
-    val Orange = Color(0xFFFF7A2E)
     val OrangeSoft = Color(0xFFF2A878)
 }
 
@@ -57,6 +58,7 @@ fun NowWhereTopBar(
     onLogoClick: () -> Unit,
     onPreferenceClick: () -> Unit,
     modifier: Modifier = Modifier,
+    haptics: Boolean = true,
     motion: Boolean = true,
     logo: @Composable () -> Unit = {
         Image(
@@ -66,6 +68,8 @@ fun NowWhereTopBar(
         )
     }
 ) {
+    val haptic = LocalHapticFeedback.current
+
     Row(
         modifier = modifier
             .fillMaxWidth()
@@ -77,7 +81,10 @@ fun NowWhereTopBar(
     ) {
         PressableCircle(
             size = 42,
-            onClick = onLogoClick,
+            onClick = {
+                VibrationHelper.performTouchHaptic(haptic, haptics)
+                onLogoClick()
+            },
             motion = motion,
             description = "Open profile",
             background = Color.Transparent
@@ -87,7 +94,10 @@ fun NowWhereTopBar(
 
         PressableCircle(
             size = 42,
-            onClick = onPreferenceClick,
+            onClick = {
+                VibrationHelper.performTouchHaptic(haptic, haptics)
+                onPreferenceClick()
+            },
             motion = motion,
             description = "Choose how to see time",
             background = Pall.Card

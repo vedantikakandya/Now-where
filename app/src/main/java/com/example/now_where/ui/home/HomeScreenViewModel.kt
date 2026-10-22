@@ -10,11 +10,13 @@ import com.example.now_where.domain.DayState
 import com.example.now_where.domain.Event
 import com.example.now_where.domain.TimeNotation
 import com.example.now_where.ui.common.NewEventDraft
+import com.example.now_where.ui.theme.VibrationHelper
 import com.example.now_where.ui.visualization.VisualizationType
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.WhileSubscribed
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
 import java.time.LocalDate
@@ -40,9 +42,21 @@ class HomeViewModel @JvmOverloads constructor(
     private val _currentScreen = MutableStateFlow(Screen.MAIN)
     private val _notation = MutableStateFlow(TimeNotation.H24)
     private val _haptics = MutableStateFlow(true)
+    private val vibratedEventIds = mutableSetOf<Long>()
 
     val uiState: StateFlow<HomeUiState> = combine(
-        combine(ticker, repository.events) { now, events -> now to events },
+        combine(ticker, repository.events) { now, events ->
+            // Check for ongoing events that haven't triggered strong vibration yet
+            val activeEvents = events.filter { it.start <= now && now < it.end }
+            for (event in activeEvents) {
+                if (event.id !in vibratedEventIds) {
+                    vibratedEventIds.add(event.id)
+                    // Trigger STRONG vibration regardless of user haptics setting
+                    VibrationHelper.triggerStrongEventVibration(getApplication())
+                }
+            }
+            now to events
+        },
         _visualization,
         _currentScreen,
         combine(_notation, _haptics) { notation, haptic -> notation to haptic }
