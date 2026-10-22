@@ -186,8 +186,7 @@ fun HomeScreen(
                             onDefaultVisualizationClick = { viewModel.navigateTo(Screen.SELECT_TIME_PREFERENCE) },
                             onNotationChange = { viewModel.setNotation(it) },
                             onHapticsChange = { viewModel.setHaptics(it) },
-                            onLogOut = { viewModel.navigateTo(Screen.MAIN) },
-                            onDeleteAccount = { viewModel.navigateTo(Screen.MAIN) }
+
                         )
                     }
 
