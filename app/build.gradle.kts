@@ -10,7 +10,7 @@ android {
     }
 
     defaultConfig {
-        applicationId = "com.example.now_where"
+        applicationId = "com.vedantika.now_where"
         minSdk = 26
         targetSdk = 37
         versionCode = 1
