@@ -71,89 +71,79 @@ private sealed interface Block {
 }
 
 private val policy: List<Block> = listOf(
-    Block.Heading("1. Introduction"),
+    Block.Heading("1. Who we are"),
     Block.Paragraph(
-        "Nowhere is designed to help people experience and understand time in ways that work for them. " +
-                "We believe that using a time-awareness tool should not require sharing unnecessary personal information."
+        "now-where (“the app”) is developed by Vedantika Kandya (“we”, “us”), an independent developer. The app helps people see and understand time in different ways, for example as a route, a clock or a flow of water."
     ),
     Block.Paragraph(
-        "This Privacy Policy explains what information Nowhere stores, how it is used, and what choices you have."
+        "This policy explains exactly what the app stores, what it does not collect, and what choices you have."
     ),
-
-    Block.Heading("2. Information We Store"),
-    Block.Paragraph(
-        "Nowhere does not require you to create an account or provide your name, email address, phone number, or password."
-    ),
-    Block.Paragraph("The app stores information locally on your device, which may include:"),
+    Block.Heading("2. The short version"),
     Block.Bullets(
         listOf(
-            "Your preferred time visualization and time format.",
-            "Accessibility and display preferences.",
-            "Events and their associated details, such as titles and times.",
-            "Timer settings and other preferences needed for the app to function."
+            "The app has no account and no sign-in.",
+            "The app has no internet permission and cannot send any data over the network.",
+            "Everything you enter stays on your device.",
+            "There are no ads, no analytics and no third-party tracking."
+        )
+    ),
+    Block.Heading("3. Information the app stores on your device"),
+    Block.Paragraph(
+        "The app stores only the following, in its private storage on your device:"
+    ),
+    Block.Bullets(
+        listOf(
+            "Events you create: the title, start time and end time.",
+            "App settings: whether haptic feedback is on or off."
         )
     ),
     Block.Paragraph(
-        "This information is used to remember your choices and provide the app's core features."
+        "The app does not collect your name, email address, phone number, location, contacts, photos, camera or microphone data, advertising ID or any device identifier."
     ),
-
-    Block.Heading("3. Where Your Data Is Stored"),
+    Block.Heading("4. How this information is used"),
     Block.Paragraph(
-        "Your preferences and events are stored locally on your device. In the initial version, Nowhere does not " +
-                "send this information to a server or synchronize it with a cloud account."
+        "Events are used to show your day in the view you choose, and to vibrate when an event starts. The haptic setting is used to remember your choice. Nothing is used for any other purpose."
     ),
+    Block.Heading("5. Where your data is stored"),
     Block.Paragraph(
-        "Your data may be lost if you uninstall the app, clear its storage, or lose access to your device. " +
-                "Device-level backups may be governed by your operating system's settings."
-    ),
-
-    Block.Heading("4. Analytics and Advertising"),
-    Block.Paragraph(
-        "The initial version of Nowhere does not use advertising trackers or analytics services to profile users. " +
-                "It does not sell personal information."
+        "Your data is stored only on your device. We do not run a server, and we never receive your data."
     ),
     Block.Paragraph(
-        "If this changes in a future version, this policy will be updated to explain the relevant data practices " +
-                "before they are introduced."
+        "The app turns off Android’s automatic cloud backup, so your events are not copied to your Google account backup. Your data will be lost if you uninstall the app, clear its storage or lose your device."
     ),
-
-    Block.Heading("5. Permissions"),
-    Block.Paragraph(
-        "Nowhere aims to request only the device permissions necessary for features you choose to use. If a future " +
-                "feature requires additional permissions, the app will explain their purpose where appropriate."
-    ),
-
-    Block.Heading("6. Sharing of Information"),
-    Block.Paragraph(
-        "Because the initial version stores app information locally and does not operate a backend service, Nowhere " +
-                "does not transmit your stored events or preferences to us or share them with third parties through its " +
-                "core functionality."
-    ),
-
-    Block.Heading("7. Your Choices and Data Deletion"),
-    Block.Paragraph(
-        "You can change your preferences and delete your events within the app, where those controls are available."
+    Block.Heading("6. Permissions"),
+    Block.Bullets(
+        listOf(
+            "Vibrate: used to give haptic feedback when you touch the app (if you turn it on) and to vibrate when an event starts. This permission does not give the app access to any of your data."
+        )
     ),
     Block.Paragraph(
-        "You can also remove locally stored app data through your device settings or uninstall the app. These " +
-                "actions may permanently erase the information stored by Nowhere on that device."
+        "The app requests no other permissions."
     ),
-
-    Block.Heading("8. Children's Privacy"),
+    Block.Heading("7. Advertising, analytics and third parties"),
     Block.Paragraph(
-        "Nowhere does not require users to submit personal information to use its core features. If the app is later " +
-                "designed or marketed specifically to children, its privacy practices and applicable requirements will be " +
-                "reviewed accordingly."
+        "The app contains no advertising, no analytics or crash-reporting service, and no third-party SDK that collects data. We do not sell or share personal information, because we do not collect any."
     ),
-
-    Block.Heading("9. Changes to This Policy"),
+    Block.Heading("8. Your choices and deleting your data"),
     Block.Paragraph(
-        "This policy may be updated if Nowhere's features or data practices change. The revised policy will include " +
-                "an updated date."
+        "You can edit or delete any event inside the app. You can erase everything the app has stored by clearing the app’s storage in your device settings, or by uninstalling the app. Because we hold no copy of your data, there is nothing for us to delete on our side."
     ),
-
-    Block.Heading("10. Contact"),
-    Block.Paragraph("If you have questions about this Privacy Policy, contact:"),
+    Block.Heading("9. Security"),
+    Block.Paragraph(
+        "Your data sits in the app’s private storage, which Android protects from other apps. The app does not add its own encryption on top of that."
+    ),
+    Block.Heading("10. Children"),
+    Block.Paragraph(
+        "The app does not collect personal information from anyone, including children, and is not directed at children specifically."
+    ),
+    Block.Heading("11. Changes to this policy"),
+    Block.Paragraph(
+        "If a future version of the app collects or shares any information, we will update this policy and its date before that version is released."
+    ),
+    Block.Heading("12. Contact"),
+    Block.Paragraph(
+        "Questions about this policy? Contact:"
+    ),
     Block.Contact
 )
 
@@ -183,7 +173,6 @@ fun PrivacyPolicyDialog(
         Column(
             modifier = Modifier
                 .touchHaptics()
-
                 .padding(horizontal = 20.dp, vertical = 24.dp)
                 .fillMaxWidth()
                 .heightIn(max = 700.dp)
@@ -207,7 +196,7 @@ fun PrivacyPolicyDialog(
                 Column(modifier = Modifier.weight(1f)) {
                     Text("Privacy Policy", fontSize = 24.sp, fontWeight = FontWeight.SemiBold, color = Ink)
                     Text(
-                        text = "Nowhere · Last updated: October 21, 2026",
+                        text = "now-where · Last updated: November 5, 2026",
                         fontFamily = Mono,
                         fontSize = 12.sp,
                         color = Muted,
